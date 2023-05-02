@@ -108,7 +108,7 @@ quit
     set themeHouse https://youtu.be/Clb4w-L_YNY
     set themeHouse-volume 0.6
     
-    set themeEnd https://youtu.be/sx358uxmOJc
+    set themeEnd https://youtu.be/Qls9xNJ_dyQ
     
     call #changeTheme|battle|themeDangerousGuys
     call #changeThemeNoLoop|lose|themeVineBoom
@@ -144,7 +144,7 @@ quit
     //set volume 0
     
     msg cef volume -n {runArg1} -g {volume}
-    msg cef resume -n {runArg1}
+    //msg cef resume -n {runArg1}
 quit
 #fadeOutTheme
     msg cef fade {volume} 0 0.5 -n {runArg1}
@@ -736,7 +736,7 @@ quit
     set yellowPotionActive true
 quit
 #carvingKnife-use
-    call #offensiveItemDamage-use|30
+    call #offensiveItemDamage-use|20
 quit
 #testWeapon-use
     call #offensiveItemDamage-use|35
@@ -1013,23 +1013,39 @@ quit
     msg {msg}
 quit
 
+
+
+
+//About Speed0 (648) (Default)
+//OLD Speed: 0.30 NEW Speed: 0.4
+
+//About Speed1 (621) (Speedier)
+//OLD Speed: 0.45 NEW Speed: 0.6
+
+
 #skillSetup
-    set skillLocation 255 253 4 0 90
     
     set buffBlockCenterX 255
     set buffBlockCenterY 1
     set buffBlockCenterZ 4
     
-    set totalBuffBlocks 10
-    set totalSkillLayers 20
+    //old value 10
+    set totalBuffBlocks 5
+    //old value 20
+    set totalSkillLayers 10
     set totalSkillLayersMinusOne {totalSkillLayers}
     setadd totalSkillLayersMinusOne -1
     set skillLayerMulti 12
     
+    set skillLocationY {totalSkillLayers}
+    setmul skillLocationY {skillLayerMulti}
+    setadd skillLocationY 13
+    set skillLocation 255 {skillLocationY} 4 0 90
+    
     set buffBlockList-count 0
     
-    set buffAmount 5
-    set debuffAmount -5
+    set buffAmount 10
+    set debuffAmount -10
     set maxBuffDamage {totalBuffBlocks}
     setmul maxBuffDamage buffAmount
     
@@ -1569,7 +1585,7 @@ quit
 #polterblastSetup
     set polterblast-name Polterblast
     set polterblast-introPhrase lights up!
-    set polterblast-outtroPhrase was destroyed!
+    set polterblast-outtroPhrase was dismantled!
     set polterblast-defeat #defaultEnemyDefeat|10
     
     set polterblast-model g+polterblast
@@ -1594,8 +1610,8 @@ quit
     call #damageEnemy|999
 quit
 #polterblastMaxDamageReaction
-    //msg &b{{curEnemy}-name}'s fuse flame falters from your furious force!
-    call {polterblast-turn}
+    msg &b{{curEnemy}-name}'s fuse flame falters from your furious force!
+    //call {polterblast-turn}
 quit
 #polterblastTick
     setadd {curEnemy}-tick -1
@@ -1926,8 +1942,8 @@ quit
 #shadowyAttack
     msg &c{{curEnemy}-name} takes a swing at you!
     delay 1000
-    setrandrange shadowyDamage 6 10
-    setmul shadowyDamage 5
+    setrandrange shadowyDamage 3 5
+    setmul shadowyDamage 10
     call #damagePlayer|{shadowyDamage}
 quit
 
@@ -2134,6 +2150,7 @@ quit
     call #changeThemeNoLoop|win|themeEnd
     call #playTheme|win
     call #fadeToWhite
+    cmd tp 255 64 110
     delay 2000
     if item GHOST_COIN call #fakeGetGhostCoin
     item get GHOST_COIN
@@ -2454,7 +2471,8 @@ quit
 quit
 #getRestroomPotion
     tempblock openchest 288 37 109
-    call #getItem|redPotion
+    call #getItem|yellowPotion
+    //was redPotion
 quit
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
