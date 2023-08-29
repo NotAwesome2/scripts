@@ -101,7 +101,7 @@ quit
     set themeBattyTwist https://youtu.be/XNOWa50qsHY
     set themeAstonishingMarch https://youtu.be/x1iKlPDRfdY
     set themeGhostTalk https://youtu.be/Vvp3Rv2yCl8
-    set themeGhostTalk-volume 0.6
+    set themeGhostTalk-volume 0.5
     
     set themeSpooky https://youtu.be/HBz_lrkp2lc
     set themeSpooky-volume 0.6
@@ -121,15 +121,29 @@ quit
 #changeTheme
     msg cef create -n {runArg1} -glasq {{runArg2}}
     set {runArg1}-volume {{runArg2}-volume}
+    set {runArg1}-url {{runArg2}}
 quit
 //runArgs: theme to change, url to change to
 #changeThemeBackground
     msg cef -b create -n {runArg1} -glasq {{runArg2}}
     set {runArg1}-volume {{runArg2}-volume}
+    set {runArg1}-url {{runArg2}}
 quit
 #changeThemeNoLoop
     msg cef create -n {runArg1} -gasq {{runArg2}}
     set {runArg1}-volume {{runArg2}-volume}
+quit
+
+#retryBattleMusic
+    call #retryTheme|battle
+quit
+//runArgs: theme to regenerate
+#retryTheme
+    msg cef remove -n {runArg1}
+    delay 500
+    call #changeTheme|{runArg1}|{runArg1}-url
+    delay 2000
+    call #playTheme|{runArg1}
 quit
 
 //runArgs: theme to play
@@ -1749,16 +1763,24 @@ quit
 quit
 #dilehaunteMaxDamageReaction
     if curTurn|=|1 jump #dilehaunteSpeedUp
+    if curTurn|=|5 jump #dilehaunteSlowDown
     call #defaultMaxDamageReaction
 quit
 #dilehaunteTurn
     if curTurn|=|1 jump #dilehaunteSpeedUp
+    if curTurn|=|5 jump #dilehaunteSlowDown
     call #defaultEnemyTurn
 quit
 #dilehaunteSpeedUp
     msg {{curEnemy}-name} casts a slowing hex on you!
     delay 1000
     call #setSkillSpeed|1
+    call #setSkillSpeedMsg
+quit
+#dilehaunteSlowDown
+    msg {{curEnemy}-name}'s slowing hex wears off.
+    delay 1000
+    call #setSkillSpeed|0
     call #setSkillSpeedMsg
 quit
 #dilehaunteAttack
@@ -2426,7 +2448,7 @@ quit
     call #unlockDoorNS|246|73|83
 quit
 #unlockLibrary
-    call #requireBattle|#armoryBattle
+    //call #requireBattle|#armoryBattle
     set preUnlockDoorLocation 239 24 90 270 29
     set unlockDoorLocation 248 73 83 91 0
     call #unlockDoorNS|265|73|83
@@ -2560,6 +2582,8 @@ quit
 #dileReplies
     reply 1|&bYou: &xI was hired for pest control.|#replyPestControl
     reply 2|&bYou: &xI'm looking for Shaun.|#replyWhereShaun
+    if item GHOST_COIN reply 3|&bYou: &xI'm here to fight you.|#replyLetsFight
+    if item GHOST_COIN quit
     if tryFrontDoorInteriorCount|>|0 reply 3|&bYou: &xI can't leave.|#replyCantLeave
     if tryFrontDoorInteriorCount|<=|0 reply 3|&bYou: &xNo particular reason.|#replyNoReason
 quit
@@ -2578,7 +2602,7 @@ quit
     jump #dileLeave
 quit
 #dileReplies2
-    
+    msg test
 quit
 #replyCantLeave
     msg &bYou: &xI can't leave.
@@ -2616,6 +2640,13 @@ quit
 #dilehaunteQuickBattle
     msg &]Dilehaunte: &xWe both know how this will go, yes? Let's get to it.
     delay msgDelay
+    jump #dilehaunteBattle
+quit
+#replyLetsFight
+    msg &bYou: &xI'm here to fight you.
+    delay 1000
+    msg &]Dilehaunte: &xOh? You think you can handle my secret techniques of darkness? En garde!
+    delay 1000
     jump #dilehaunteBattle
 quit
 #dilehaunteBattle
