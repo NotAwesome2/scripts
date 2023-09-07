@@ -1,23 +1,56 @@
 
 
 #accessControl
-    //okias thing todo remove
-    //quit
-    
     ifnot canAccess. msg You must &b/goto pestcontrol &Sbefore you can access &4ghosthouse&S.
     ifnot canAccess. set denyAccess true
     ifnot canAccess. quit
-    
-    //ifnot item SILVER_BAT msg You won't survive ghosthouse without your silver bat. Pick it up from &4pestcontrol&S again.
-    //ifnot item SILVER_BAT set denyAccess true
-    //ifnot item SILVER_BAT quit
+quit
+
+//runArgs: package that contains label/runargs to call upon save loaded
+#addLoadSaveAction
+    if loadSaveActions-count.|=| set loadSaveActions-count. 0
+    set loadSaveActions[{loadSaveActions-count.}]. {{runArg1}}
+    //show loadSaveActions[{loadSaveActions-count.}].
+    setadd loadSaveActions-count. 1
+quit
+#runLoadSaveActions
+    if loadSaveActions-count.|=|0 quit
+    set lsai 0
+    #runLoadSaveActionsLoop
+        call {loadSaveActions[{lsai}].}
+        //msg [{lsai}] {loadSaveActions[{lsai}].}
+        setadd lsai 1
+    ifnot lsai|>=|loadSaveActions-count. jump #runLoadSaveActionsLoop
+quit
+#loadSave
+    msg &bLoading your save...
+    call #runLoadSaveActions
+    //delay 1000
+    call #respawnPlayer
+    call #playTheme|main
+    msg &bSave loaded.
+quit
+
+#resetSave
+    item take MAGIC_HAMMER
+    resetdata saved #*Battle.
+    resetdata saved loadSaveActions*
+    resetdata saved #unlock*
+    resetdata saved player-total*
+    set player-curHealth. {player-maxHealth}
+    //msg Reset your save.
+quit
+
+#newGame
+    call #resetSave
+    call #respawnPlayer
+    call #playTheme|main
 quit
 
 #spawnMB
     if spawned quit
     set spawned true
     
-    item take MAGIC_HAMMER
     set defaultMaxFog 512
     set defaultFogColor FFDDB5
     set defaultSkyColor 010C42
@@ -50,13 +83,10 @@ quit
     call #skillSetup
     call #menusSetup
     call #inputSetup
-    //todo put back
     call #cefSetup
     
     call #itemSetup
     
-    //todo put back
-    call #playTheme|main
     
     set respawnLocation 7792 6400 6320 0 0
     
@@ -68,6 +98,11 @@ quit
     set hamma hamma
     set hammah hammah
     set crowbar crowbar
+    
+    if loadSaveActions-count.|=|0 jump #newGame
+    
+    reply 1|&bContinue from save|#loadSave
+    reply 3|&aNew game|#newGame
 quit
 
 #trunk
@@ -153,9 +188,6 @@ quit
     set volume {{runArg1}-volume}
     if volume|=| set volume 1
     setdiv volume 2
-    
-    //debug silence todo remove
-    //set volume 0
     
     msg cef volume -n {runArg1} -g {volume}
     //msg cef resume -n {runArg1}
@@ -296,19 +328,10 @@ quit
 // ------------------------------------------------------------------------- BATTLE METHODS ----------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-#resetBattles
-    resetdata packages #*Battle
-    msg Reset battles
-quit
 
-
-#shouldBeginBattle?
-    //okias thing todo remove
-    //terminate
-    
+#shouldBeginBattle?   
     set curBattle {runArg0}
-    //if {curBattle} msg You already won this battle.
-    if {curBattle} terminate
+    if {curBattle}. terminate
 quit
 
 #firstBattle
@@ -327,7 +350,7 @@ quit
 quit
 #diningRoomBattle
     //when exiting the kitchen, jumpscare in dining room
-    ifnot #kitchenBattle quit
+    ifnot #kitchenBattle. quit
     call #shouldBeginBattle?
     
     call #setCurArena|defaultArena
@@ -351,6 +374,11 @@ quit
 quit
 #foedoorDefeat
     call #defaultEnemyDefeat|8
+    
+    set temp #_foedoorDefeat
+    call #addLoadSaveAction|temp
+    
+    #_foedoorDefeat
     tempchunk 234 54 87 237 60 90 234 63 87
 quit
 #foedoorBasementBattle
@@ -363,6 +391,11 @@ quit
 quit
 #foedoorBasementDefeat
     call #defaultEnemyDefeat|8
+    
+    set temp #_foedoorBasementDefeat
+    call #addLoadSaveAction|temp
+    
+    #_foedoorBasementDefeat
     tempblock air 275 54 162
     tempblock air 275 54 163
     tempblock air 275 55 163
@@ -387,6 +420,11 @@ quit
 quit
 #armoryDefeat
     call #defaultEnemyDefeat|10
+    
+    set temp #_armoryDefeat
+    call #addLoadSaveAction|temp
+    
+    #_armoryDefeat
     cmd tbot remove armor
 quit
 #polterblastBattle
@@ -444,7 +482,6 @@ quit
     cmd tbot summon enemy {{curArena}-tbotLocation}
     cmd tbot skin enemy {{curEnemy}-skin}
     
-    //msg starting {curBattle}
     set overworldLocation {MBCoords} {PlayerYaw} {PlayerPitch}
     
     freeze
@@ -492,8 +529,9 @@ quit
     delay 2000
     newthread #fadeOutTheme|win
     call #displayPlayerHealth|0
-    set {curBattle} true
+    set {curBattle}. true
     call #stopBattle|1
+    msg &bYour progress was saved. :thumbsup:
 quit
 #loseBattle
     freeze
@@ -503,11 +541,11 @@ quit
     call #playTheme|lose
     delay 200
     cpemsg announce &cYou were defeated...
-    setadd player-totalDeaths 1
+    setadd player-totalDeaths. 1
     env maxfog 1
     delay 5000
     call #removePlayerHealth
-    set player-curHealth {player-maxHealth}
+    set player-curHealth. {player-maxHealth}
     set yellowPotionActive false
     call #stopBattle|0
 quit
@@ -655,16 +693,6 @@ quit
     item get MAGIC_HAMMER
 quit
 
-#tempBandsag
-    if bandsag quit
-    set bandsag true
-    set yellowPotion-name &eYellow Potion
-    set yellowPotion-consumable true
-    set yellowPotion-count 0
-    set items[{totalItems}] yellowPotion
-    setadd totalItems 1
-    msg setup yellow potion
-quit
 
 // -------------------------------------------------------- item setup 
 #itemSetup
@@ -729,15 +757,15 @@ quit
     call #displayPlayerHealth|0
 quit
 #redPotion-use
-    if player-curHealth|>=|player-maxHealth msg You already have full health! Potion was not used.
-    if player-curHealth|>=|player-maxHealth quit
+    if player-curHealth.|>=|player-maxHealth msg You already have full health! Potion was not used.
+    if player-curHealth.|>=|player-maxHealth quit
     
     msg You drink the red potion. Yeeucky!
     msg It restores &a50 &Shealth!
     setadd redPotion-count -1
     msg (you have {redPotion-count} left)
-    setadd player-curHealth 50
-    if player-curHealth|>|player-maxHealth set player-curHealth {player-maxHealth}
+    setadd player-curHealth. 50
+    if player-curHealth.|>|player-maxHealth set player-curHealth. {player-maxHealth}
     call #displayPlayerHealth|-50
 quit
 #yellowPotion-use
@@ -819,12 +847,20 @@ quit
 quit
 //internal don't use in MBs
 #getReusableItem
+    //again in case loaded save
+    tempblock openchest {MBCoords}
     if {item}-count|>|0 msg You've already found {{item}-name} &Shere.
     if {item}-count|>|0 quit
     
-    set {item}-count 1
+    call #_getReuseableItem|{item}
     msg Found a supply: {{item}-name}&S!
     msg Use &b/input supplies &Sto see them all.
+    
+    set temp #_getReuseableItem|{item}
+    call #addLoadSaveAction|temp
+quit
+#_getReuseableItem
+    set {runArg1}-count 1
 quit
 
 #restoreConsumableItems
@@ -1214,8 +1250,8 @@ quit
 #endSkill
     //don't want double end
     if endedEarly quit
-    ifnot endedEarly setadd player-totalSwings 1
-    ifnot endedEarly setadd player-totalSwingDamage player-curAttackDamage
+    ifnot endedEarly setadd player-totalSwings. 1
+    ifnot endedEarly setadd player-totalSwingDamage. player-curAttackDamage
     
     #endSkillCore
     
@@ -1236,36 +1272,32 @@ quit
 // ---------------------------------------------------------------------------------------------------------------------------------------
 #playerSetup
     set player-maxHealth 100
-    set player-curHealth 100
-    
-    
-    
-    set player-totalDeaths 0
-    set player-totalDamageTaken 0
-    set player-totalDamageDealt 0
-    set player-totalSwingDamage 0
-    set player-totalSwings 0
 
-    set player-totalCoinsFound 0
+    if player-totalDeaths.|=| set player-totalDeaths. 0
+    if player-totalDamageTaken.|=| set player-totalDamageTaken. 0
+    if player-totalDamageDealt.|=| set player-totalDamageDealt. 0
+    if player-totalSwingDamage.|=| set player-totalSwingDamage. 0
+    if player-totalSwings.|=| set player-totalSwings. 0
+    if player-totalCoinsFound.|=| set player-totalCoinsFound. 0
 quit
 #displayPlayerStats
-    set player-averageBatDamage {player-totalSwingDamage}
-    ifnot player-totalSwings|=|0 setdiv player-averageBatDamage player-totalSwings
+    set player-averageBatDamage {player-totalSwingDamage.}
+    ifnot player-totalSwings.|=|0 setdiv player-averageBatDamage player-totalSwings.
     setround player-averageBatDamage
     
     msg &a- Statistics! -
     delay 2000
-    msg Total Deaths:&6 {player-totalDeaths}
+    msg Total Deaths:&6 {player-totalDeaths.}
     delay creditsDelay
-    msg Total Damage Taken:&6 {player-totalDamageTaken}
+    msg Total Damage Taken:&6 {player-totalDamageTaken.}
     delay creditsDelay
-    msg Total Damage Dealt:&6 {player-totalDamageDealt}
+    msg Total Damage Dealt:&6 {player-totalDamageDealt.}
     delay creditsDelay
     msg Average bat damage:&6 {player-averageBatDamage} &S(excluding finishing blows)
     delay creditsDelay
-    msg Total bat swings:&6 {player-totalSwings} &S(excluding finishing blows)
+    msg Total bat swings:&6 {player-totalSwings.} &S(excluding finishing blows)
     delay creditsDelay
-    msg Total coins discovered:&6 {player-totalCoinsFound}
+    msg Total coins discovered:&6 {player-totalCoinsFound.}
     delay 2000
 quit
 #playerPostBattle
@@ -1295,7 +1327,7 @@ quit
     
     set actualDamageDealt {damage}
     if actualDamageDealt|>|{curEnemy}-curHealth set actualDamageDealt {{curEnemy}-curHealth}
-    setadd player-totalDamageDealt actualDamageDealt
+    setadd player-totalDamageDealt. actualDamageDealt
     
     setsub {curEnemy}-curHealth damage
     cpemsg announce
@@ -1323,10 +1355,10 @@ quit
     set damage {runArg1}
     
     set actualDamageDealt {damage}
-    if actualDamageDealt|>|player-curHealth set actualDamageDealt {player-curHealth}
-    setadd player-totalDamageTaken actualDamageDealt
+    if actualDamageDealt|>|player-curHealth. set actualDamageDealt {player-curHealth.}
+    setadd player-totalDamageTaken. actualDamageDealt
     
-    setsub player-curHealth damage
+    setsub player-curHealth. damage
     msg You take &c{damage} &Sdamage!
     call #displayPlayerHealth|{damage}
     
@@ -1334,7 +1366,7 @@ quit
     setdiv damage 2
     cmd boost 0 {damage} 0 1 1 1
     
-    if player-curHealth|<=|0 goto #loseBattle
+    if player-curHealth.|<=|0 goto #loseBattle
 quit
 
 //runArgs: name of enemy to set to
@@ -1345,13 +1377,13 @@ quit
 //runArgs: amount of money to give upon death
 #defaultEnemyDefeat
     set enemyReward {runArg1}
-    setadd player-totalCoinsFound enemyReward
-    cmd rewardfrom {curBattle} {enemyReward} false
+    setadd player-totalCoinsFound. enemyReward
+    cmd rewardfrom {curBattle}. {enemyReward} false
 quit
 //runArgs: amount of coins to get
 #reward
     set reward {runArg1}
-    setadd player-totalCoinsFound reward
+    setadd player-totalCoinsFound. reward
     cmd reward {reward}
 quit
 #defaultMaxDamageReaction
@@ -1738,6 +1770,10 @@ quit
 #dilehaunteDefeat
     call #defaultEnemyDefeat|20
     //cmd tempbot summon dilehaunte 0 0 0 0 0
+    
+    set temp #turnChairBack
+    call #addLoadSaveAction|temp
+    
     call #turnChairBack
 quit
 #dilehaunteSetup
@@ -1799,13 +1835,20 @@ quit
 
 // ------------------------------------ shaun ------------------------------------
 #shaunDefeat
+    call #_shaunDefeat
+    
+    set temp #_shaunDefeat
+    call #addLoadSaveAction|temp
+quit
+#_shaunDefeat
     set shaunAtDoor false
     cmd tempbot model shaun g+rekt
     cmd tbot ai shaun summon 258.0938 64 109.9688 14 7
     tempblock speech 259 65 111
+    set respawnLocation 8192 2048 3365 180 0
 quit
 #shaunRekt
-    ifnot #shaunBattle quit
+    ifnot #shaunBattle. quit
     if shaunPassedOut quit
     set shaunPassedOut true
     freeze
@@ -1838,6 +1881,10 @@ quit
     set shaun-maxHealth 200
     set shaun-curHealth {{curEnemy}-maxHealth}
     
+    set shaun-timesLostGun 0
+    set shaun-potionsChugged 0
+    set shaun-maxPotions 5
+    
     #shaunGunSetup
     set shaun-lostGun false
     set shaun-justLostGun false
@@ -1852,10 +1899,18 @@ quit
     set shaun-action1 #shaunGun
 quit
 #shaunPotion
+    if shaun-potionsChugged|>|shaun-maxPotions jump #defaultEnemyTurn
+    setadd shaun-potionsChugged 1
     msg &o{{curEnemy}-name} chugs a red potion!
     setadd {curEnemy}-curHealth 50
     call #displayEnemyHealth|-50
     delay 1000
+    if shaun-potionsChugged|>|shaun-maxPotions call #shaunPotionThrowUp
+quit
+#shaunPotionThrowUp
+    msg &o...and immediately vomits! &2┘&4╥
+    setsub {curEnemy}-curHealth 50
+    call #displayEnemyHealth|50
 quit
 #shaunTurn
     if shaun-justLostGun jump #shaunLookGun
@@ -1899,9 +1954,11 @@ quit
     delay msgDelay
 quit
 #shaunExt
-    msg &6{{curEnemy}-name}: &xWhat the--GYYAAHGH!
+    if shaun-timesLostGun|=|0 msg &6{{curEnemy}-name}: &xWhat the--GYYAAHGH!
+    if shaun-timesLostGun|>|0 msg &6{{curEnemy}-name}: &xGYYAAHGH I should have been ready for this--!
     delay msgDelay
     msg &bShaun loses hold of his gun and it bounces away!
+    setadd shaun-timesLostGun 1
     set shaun-lostGun true
     set shaun-justLostGun true
     cmd tbot model enemy goodlyay+meleestance
@@ -1955,7 +2012,7 @@ quit
     call #changeThemeBackground|battle|themeSilence
     
     set shadowy-maxHealth 100
-    set shadowy-curHealth {player-curHealth}
+    set shadowy-curHealth {player-curHealth.}
     
     set shadowy-turn #defaultEnemyTurn
     set shadowy-actionCount 1
@@ -1978,7 +2035,7 @@ quit
 //runArgs: health difference
 #displayPlayerHealth
     call #calcDiffString|{runArg1}|diffString
-    call #calcHPstring|{player-maxHealth}|{player-curHealth}|healthString
+    call #calcHPstring|{player-maxHealth}|{player-curHealth.}|healthString
     
     ifnot diff|=|0 cpemsg bot1 &fYou: {healthString} {diffString} <
     ifnot diff|=|0 delay 100
@@ -2137,7 +2194,20 @@ quit
     changemodel
     cpemsg announce &bShaun's House?
     call #playTheme|main
+    call #setSpawnAtFrontDoor
+    
+    //save v
+    set temp #setSpawnAtFrontDoor
+    call #addLoadSaveAction|temp
+    set temp #changeTheme|main|themeHouse
+    call #addLoadSaveAction|temp
+    //save ^
+    
+    call #setSpawnAtFrontDoor
+    
     set decidingDoor false
+quit
+#setSpawnAtFrontDoor
     set frontDoorRespawnLocation 8192 2048 3600 0 0
     set respawnLocation {frontDoorRespawnLocation}
 quit
@@ -2177,7 +2247,7 @@ quit
     if item GHOST_COIN call #fakeGetGhostCoin
     item get GHOST_COIN
     delay 2000
-    msg &eThis coin unlocks the ┴ flair!
+    msg &eThis coin unlocks the &f┴ &eflair!
     msg &eUse &b/help flair &eto learn how to use it.
     #skipCoin
     delay 3000
@@ -2242,7 +2312,7 @@ quit
 quit
 #tryFrontDoorInterior
     if frontDoorChoice quit
-    if #shaunBattle jump #frontDoorLeave
+    if #shaunBattle. jump #frontDoorLeave
     if shaunAtDoor msg Shaun is in the way.
     if shaunAtDoor quit
     setadd tryFrontDoorInteriorCount 1
@@ -2277,6 +2347,11 @@ quit
 
 
 
+// ---------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------- UNLOCK DOORS ------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------
+
+
 //runArgs: x, y, z pos center of door (min justified)
 #unlockDoorNS
     set unlockingDoor true
@@ -2288,34 +2363,36 @@ quit
     setadd sparkly 0.5
     cmd effect sparkleprecise {MBX} {sparkly} {MBZ} 0 0 0
     delay 1000
-    if {runArg0} msg The door is unblocked now!
+    if {runArg0}. msg The door is unblocked now!
     
     cmd tp {unlockDoorLocation}
     delay 500
-    ifnot {runArg0} cmd tp {unlockDoorLocation}
+    ifnot {runArg0}. cmd tp {unlockDoorLocation}
     delay 500
     
+    call #_unlockDoorNS
+    
+    ifnot {runArg0}. delay 2000
+    if {runArg0}. delay 1000
+    cmd tp {preUnlockDoorLocation}
+    delay 500
+    unfreeze
+    changemodel
+    set unlockingDoor false
+quit
+#_unlockDoorNS
     set doorX {runArg1}
     set doorY {runArg2}
     set doorZ {runArg3}
     setadd doorY 1
     setadd doorZ 0.5
-    ifnot {runArg0} cmd effect explosionsteam {doorX} {doorY} {doorZ} 0 0 0
+    ifnot {runArg0}. cmd effect explosionsteam {doorX} {doorY} {doorZ} 0 0 0
     setadd doorY -1
     setadd doorZ -0.5
     setadd doorX -1
-    
     call #doorNSBoardLayer
     setadd doorY 2
     call #doorNSBoardLayer
-    ifnot {runArg0} delay 2000
-    if {runArg0} delay 1000
-    cmd tp {preUnlockDoorLocation}
-    delay 500
-    unfreeze
-    changemodel
-    set {runArg0} true
-    set unlockingDoor false
 quit
 #doorNSBoardLayer
     tempblock air {doorX} {doorY} {doorZ}
@@ -2341,34 +2418,37 @@ quit
     setadd sparkly 0.5
     cmd effect sparkleprecise {MBX} {sparkly} {MBZ} 0 0 0
     delay 1000
-    if {runArg0} msg The door is unblocked now!
+    if {runArg0}. msg The door is unblocked now!
     
     cmd tp {unlockDoorLocation}
     delay 500
-    ifnot {runArg0} cmd tp {unlockDoorLocation}
+    ifnot {runArg0}. cmd tp {unlockDoorLocation}
     delay 500
     
+    call #_unlockDoorWE
+    
+    ifnot {runArg0}. delay 2000
+    if {runArg0}. delay 1000
+    cmd tp {preUnlockDoorLocation}
+    delay 500
+    unfreeze
+    changemodel
+    set unlockingDoor false
+quit
+#_unlockDoorWE
     set doorX {runArg1}
     set doorY {runArg2}
     set doorZ {runArg3}
     setadd doorY 1
     setadd doorX 0.5
-    ifnot {runArg0} cmd effect explosionsteam {doorX} {doorY} {doorZ} 0 0 0
+    //runArg0 is not preserved when called from loadSaveActions... too bad!
+    ifnot {runArg0}. cmd effect explosionsteam {doorX} {doorY} {doorZ} 0 0 0
     setadd doorY -1
     setadd doorX -0.5
     setadd doorZ -1
-    
     call #doorWEBoardLayer
     setadd doorY 2
     call #doorWEBoardLayer
-    ifnot {runArg0} delay 2000
-    if {runArg0} delay 1000
-    cmd tp {preUnlockDoorLocation}
-    delay 500
-    unfreeze
-    changemodel
-    set {runArg0} true
-    set unlockingDoor false
 quit
 #doorWEBoardLayer
     tempblock air {doorX} {doorY} {doorZ}
@@ -2382,39 +2462,58 @@ quit
 quit
 
 
-// ---------------------------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------- UNLOCK DOORS ------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------
-
-
 //runArgs: string label of battle that must be won
 #requireBattle
-    //todo put this back
-    ifnot {runArg1} msg Not so fast! It's currently sealed by some kind of ghostly force.
-    ifnot {runArg1} terminate
+    ifnot {runArg1}. msg Not so fast! It's currently sealed by some kind of ghostly force.
+    ifnot {runArg1}. terminate
 quit
+
 #unlockLeftFoyer
     call #requireBattle|#firstBattle
     set preUnlockDoorLocation 256 73 117 358 49
     set unlockDoorLocation 251 64 106 334 0
-    call #unlockDoorWE|248|64|100|
+    call #unlockDoorWE|248|64|100
+
+    if {runArg0}. quit
+    set temp #_unlockDoorWE|248|64|100
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockRightFoyer
     call #requireBattle|#musicBattle
     set preUnlockDoorLocation 238 38 97 226 35
     set unlockDoorLocation 259 64 106 32 0
     call #unlockDoorWE|262|64|100
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorWE|262|64|100
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockFirstBedroom
     call #requireBattle|#kitchenBattle
     set preUnlockDoorLocation 290 52 89 54 329
     set unlockDoorLocation 261 73 93 270 0
     call #unlockDoorNS|246|73|93
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|246|73|93
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockMiddleFoyer
     set preUnlockDoorLocation 238 52 98 240 29
     set unlockDoorLocation 254 64 101 0 0
     call #unlockDoorWE|253|64|91
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorWE|253|64|91
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockKitchenDoor
     tempblock air 280 52 92
@@ -2428,6 +2527,12 @@ quit
     set preUnlockDoorLocation 238 38 74 23 25
     set unlockDoorLocation 254 64 89 32 0
     call #unlockDoorNS|258|64|83
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|258|64|83
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #armoryPotion
     call #requireBattle|#armoryBattle
@@ -2438,26 +2543,53 @@ quit
     set preUnlockDoorLocation 261 24 73 333 4
     set unlockDoorLocation 265 64 89 64 0
     call #unlockDoorWE|270|64|86
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorWE|270|64|86
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockSecondBedroom
-    ifnot #dilehaunteBattle quit
+    ifnot #dilehaunteBattle. quit
     if talkingDile msg Can't do that while someone is talking to you.
     if talkingDile quit
     set preUnlockDoorLocation 290 64 76 64 28
     set unlockDoorLocation 260 73 84 271 0
     call #unlockDoorNS|246|73|83
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|246|73|83
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockLibrary
     //call #requireBattle|#armoryBattle
     set preUnlockDoorLocation 239 24 90 270 29
     set unlockDoorLocation 248 73 83 91 0
     call #unlockDoorNS|265|73|83
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|265|73|83
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockBasement
     set preUnlockDoorLocation 271 15 102 254 1
     set unlockDoorLocation 257 59 96 143 15
     call #unlockDoorNS|260|58|99
     
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|260|58|99
+    call #addLoadSaveAction|temp
+    set temp #unlockBasement2
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
+    
+    #unlockBasement2
     //open self
     tempblock openchest 272 17 102
     //one in mirror
@@ -2484,12 +2616,24 @@ quit
     set preUnlockDoorLocation 308 34 161 180 39
     set unlockDoorLocation 267 54 161 230 0
     call #unlockDoorWE|262|54|165
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorWE|262|54|165
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #unlockRestroom
     call #requireBattle|#polterblastBasementBattle
     set preUnlockDoorLocation 303 51 162 90 4
     set unlockDoorLocation 252 64 105 82 358
     call #unlockDoorNS|265|64|103
+    
+    if {runArg0}. quit
+    set temp #_unlockDoorNS|265|64|103
+    call #addLoadSaveAction|temp
+    
+    set {runArg0}. true
 quit
 #getRestroomPotion
     tempblock openchest 288 37 109
@@ -2502,10 +2646,7 @@ quit
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
 #chairCutscene
-    //okias thing todo remove
-    //terminate
-
-    if #dilehaunteBattle quit
+    if #dilehaunteBattle. quit
     if chairCutsceneDone quit
     set chairCutsceneDone true
     setadd chairCutsceneTimesSeen 1
@@ -2601,9 +2742,6 @@ quit
     delay msgDelay
     jump #dileLeave
 quit
-#dileReplies2
-    msg test
-quit
 #replyCantLeave
     msg &bYou: &xI can't leave.
     delay 1000
@@ -2681,8 +2819,8 @@ quit
     delay msgDelay
     msg &]Dilehaunte: &xIf you'd like to leave, all you need is to touch it to the door.
     delay 1000
-    ifnot #shaunBattle jump #dilehaunteHelpOption
-    if #shaunBattle jump #dilehaunteShaunOption
+    ifnot #shaunBattle. jump #dilehaunteHelpOption
+    if #shaunBattle. jump #dilehaunteShaunOption
     #dilehaunteTalkEnd
     unfreeze
     //no MBCoords since reply gives 0 0 0
@@ -2704,19 +2842,26 @@ quit
     delay msgDelay
     
     set item dileItem
-    cmd effect explosionsteam 286 64 78 0 0 0
-    cmd tempbot model dilehaunte 0
     call #getReusableItem|dileItem
-    tempblock air 287 65 78
-    tempblock air 287 66 78
-    tempblock air 287 67 78
-    tempblock air 287 68 78
+    
+    cmd effect explosionsteam 286 64 78 0 0 0
+    call #eraseDilehaunte
+    set temp #eraseDilehaunte
+    call #addLoadSaveAction|temp
+    
     delay 2000
     msg &]Dilehaunte: &xAt your service.
     
     //jump #dilehaunteTalkEnd don't do this since we don't want speech bubble to re-appear
     unfreeze
     set talkingDile
+quit
+#eraseDilehaunte
+    cmd tempbot model dilehaunte 0
+    tempblock air 287 65 78
+    tempblock air 287 66 78
+    tempblock air 287 67 78
+    tempblock air 287 68 78
 quit
 #replyTellAboutShaun
     msg You tell Dilehaunte about Shaun.
@@ -2736,9 +2881,10 @@ quit
 quit
 #hearthExt
     if unlockingDoor quit
-    ifnot #dilehaunteBattle quit
+    ifnot #dilehaunteBattle. quit
     if talkingDile msg Can't do that while someone is talking to you.
     if talkingDile quit
+    tempblock openchest {MBCoords}
     if fireExtinguisher-count|>|0 msg You've already found {fireExtinguisher-name} &Shere.
     if fireExtinguisher-count|>|0 quit
     
@@ -2765,7 +2911,7 @@ quit
     unfreeze
 quit
 #dilehaunteFun
-    ifnot #dilehaunteBattle quit
+    ifnot #dilehaunteBattle. quit
     if dilehaunteFun quit
     set dilehaunteFun true
     msg &]Dilehaunte: &xHaving fun up there?
@@ -2778,41 +2924,60 @@ quit
 
 #ghostCoinGlass
     if unlockingDoor quit
-    ifnot #firstBattle quit
+    ifnot #firstBattle. quit
     if ghostCoinGlassBroken jump #ghostCoin
     if item MAGIC_HAMMER jump #breakGhostCoinGlass
     freeze
     msg Seems to be some kind of magical barrier.
-    if #dilehaunteBattle delay 1000
-    if #dilehaunteBattle msg According to Dilehaunte, this coin should allow me to escape.
-    if #dilehaunteBattle msg Is there an artifact in this house capable of breaking it?
+    if #dilehaunteBattle. delay 1000
+    if #dilehaunteBattle. msg According to Dilehaunte, this coin should allow me to escape.
+    if #dilehaunteBattle. msg Is there an artifact in this house capable of breaking it?
     unfreeze
 quit
 #ghostCoin
     //already have
     if ghostCoin-count|>|0 quit
-    set ghostCoin-count 1
     freeze
-    cmd tbot model ghostcoin 0
+    
+    call #_ghostCoin
+    
+    set temp #_ghostCoin
+    call #addLoadSaveAction|temp
+    set temp #moveShaunToDoorInstantly
+    call #addLoadSaveAction|temp
+    
     msg Found a supply: {ghostCoin-name}&S!
     msg Use &b/input supplies &Sto see them all.
     delay 1000
     msg &bI should be able to open the front door with this!
     delay 1000
     unfreeze
-    set respawnLocation 8192 2336 3504 0 0
+    
     call #moveShaunToDoor
+quit
+#_ghostCoin
+    set ghostCoin-count 1
+    cmd tbot model ghostcoin 0
+    set respawnLocation 8192 2336 3504 0 0
 quit
 #breakGhostCoinGlass
     freeze
     msg You use the &6MAGIC HAMMER &Son the barrier.
     delay 1000
-    tempchunk 254 74 137 257 76 140 254 74 113
+    call #_breakGhostCoinGlass
+    
+    set temp #_breakGhostCoinGlass
+    call #addLoadSaveAction|temp
+    
     delay 50
     cmd effect explosionsteam 255.5 74.5 114.5 0 0 0
-    set ghostCoinGlassBroken true
+    
     msg &e*CRASH*
     unfreeze
+quit
+#_breakGhostCoinGlass
+    tempchunk 254 74 137 257 76 140 254 74 113
+    set ghostCoinGlassBroken true
 quit
 #resetShaun
     set shaunAtDoor false
@@ -2824,15 +2989,23 @@ quit
 #moveShaunToDoor
     //call #resetShaun
     delay 1000
+    call #_moveShaunToDoor
+    delay 500
+    cmd tbot ai shaun move 253 64 94,wait 5,move 255.5 64 112 28,stare
+quit
+#_moveShaunToDoor
     set shaunAtDoor true
     tempblock Board-N 253 64 94
     tempblock Board-N 253 65 94
     tempblock Board-N 253 66 94
-    delay 500
-    cmd tbot ai shaun move 253 64 94,wait 5,move 255.5 64 112 28,stare
+quit
+#moveShaunToDoorInstantly
+    call #_moveShaunToDoor
+    cmd tbot summon shaun 255.5 64 112 0 0
+    cmd tbot ai shaun stare
 quit
 #shaunDoorTalk
-    if #shaunBattle quit
+    if #shaunBattle. quit
     ifnot shaunAtDoor quit
     if shaunCutscene quit
     set shaunCutscene true
@@ -2943,7 +3116,7 @@ quit
     terminate
 quit
 #chestRiddle
-    ifnot #magicHammerBattle quit
+    ifnot #magicHammerBattle. quit
     msg &xThere's an inscription here.
     msg -
     msg I have a head, but can't see
@@ -2956,7 +3129,7 @@ quit
     set gotRiddleHint true
 quit
 #riddleChest
-    ifnot #magicHammerBattle quit
+    ifnot #magicHammerBattle. quit
     ifnot solvedRiddle jump #riddleChestLocked
     tempblock openchest {MBCoords}
     if item MAGIC_HAMMER msg You already found the &6MAGIC HAMMER &Shere.
