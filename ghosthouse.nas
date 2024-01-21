@@ -1,4 +1,4 @@
-
+//allowcef
 
 #accessControl
     ifnot canAccess. msg You must &b/goto pestcontrol &Sbefore you can access &4ghosthouse&S.
@@ -27,7 +27,7 @@ quit
     call #runLoadSaveActions
     //delay 1000
     call #respawnPlayer
-    call #playTheme|main
+    call #playTheme|m
     msg &bSave loaded.
 quit
 
@@ -44,7 +44,7 @@ quit
 #newGame
     call #resetSave
     call #respawnPlayer
-    call #playTheme|main
+    call #playTheme|m
 quit
 
 #spawnMB
@@ -122,33 +122,56 @@ quit
 
 #cefSetup
     
-    set themeSilence https://youtu.be/rrzCctUYttY
+    //set themeSilence https://youtu.be/rrzCctUYttY
+    //set themeSilence-volume 2
+    //set themeDangerousGuys https://youtu.be/BrlUetq8HqE
+    //set themeVineBoom https://youtu.be/_vBVGjFdwk4
+    //set themeYouWon https://youtu.be/gniYdGiQNTg
+    //set themePepperSteak https://youtu.be/V81DlvZkxGE
+    //set themeOtherworldlyOpponent https://youtu.be/BChh_cBLij0
+    //set themeBackBeatBattle https://youtu.be/aLSAcMcUBhA
+    //set themeLastSurprise https://youtu.be/jNCH3XlQ4Fg
+    //set themeMadRatDead https://youtu.be/E-H9D1x5YOk
+    //set themeMadRatHeart https://youtu.be/ZJZ6SYXYv2k
+    //set themeBattyTwist https://youtu.be/XNOWa50qsHY
+    //set themeAstonishingMarch https://youtu.be/x1iKlPDRfdY
+    //set themeGhostTalk https://youtu.be/Vvp3Rv2yCl8
+    //set themeGhostTalk-volume 0.5
+    //
+    //set themeSpooky https://youtu.be/HBz_lrkp2lc
+    //set themeSpooky-volume 0.6
+    //set themeHouse https://youtu.be/Clb4w-L_YNY
+    //set themeHouse-volume 0.6
+    //
+    //set themeEnd https://youtu.be/Qls9xNJ_dyQ
+    
+    set themeSilence https://files.catbox.moe/cclgq2.mp3
     set themeSilence-volume 2
-    set themeDangerousGuys https://youtu.be/BrlUetq8HqE
-    set themeVineBoom https://youtu.be/_vBVGjFdwk4
-    set themeYouWon https://youtu.be/gniYdGiQNTg
-    set themePepperSteak https://youtu.be/V81DlvZkxGE
-    set themeOtherworldlyOpponent https://youtu.be/BChh_cBLij0
-    set themeBackBeatBattle https://youtu.be/aLSAcMcUBhA
-    set themeLastSurprise https://youtu.be/jNCH3XlQ4Fg
-    set themeMadRatDead https://youtu.be/E-H9D1x5YOk
-    set themeMadRatHeart https://youtu.be/ZJZ6SYXYv2k
-    set themeBattyTwist https://youtu.be/XNOWa50qsHY
-    set themeAstonishingMarch https://youtu.be/x1iKlPDRfdY
-    set themeGhostTalk https://youtu.be/Vvp3Rv2yCl8
+    set themeDangerousGuys https://files.catbox.moe/wf20g2.mp3
+    set themeVineBoom https://files.catbox.moe/ywgkvi.mp3
+    set themeYouWon https://files.catbox.moe/f9yag2.mp3
+    set themePepperSteak https://files.catbox.moe/iv4x5a.mp3
+    set themeOtherworldlyOpponent https://files.catbox.moe/tqcqvv.mp3
+    set themeBackBeatBattle https://files.catbox.moe/rgepvu.mp3
+    set themeLastSurprise https://files.catbox.moe/c5gxdc.mp3
+    set themeMadRatDead https://files.catbox.moe/9qantw.mp3
+    set themeMadRatHeart https://files.catbox.moe/34p923.mp3
+    set themeBattyTwist https://files.catbox.moe/20w0a6.mp3
+    set themeAstonishingMarch https://files.catbox.moe/vdbaym.mp3
+    set themeGhostTalk https://files.catbox.moe/2kqb03.mp3
     set themeGhostTalk-volume 0.5
     
-    set themeSpooky https://youtu.be/HBz_lrkp2lc
+    set themeSpooky https://files.catbox.moe/ui341t.mp3
     set themeSpooky-volume 0.6
-    set themeHouse https://youtu.be/Clb4w-L_YNY
+    set themeHouse https://files.catbox.moe/04p4mn.mp3
     set themeHouse-volume 0.6
     
-    set themeEnd https://youtu.be/Qls9xNJ_dyQ
+    set themeEnd https://files.catbox.moe/gog7xf.mp3
     
-    call #changeTheme|battle|themeDangerousGuys
-    call #changeThemeNoLoop|lose|themeVineBoom
-    call #changeThemeNoLoop|win|themeYouWon
-    call #changeTheme|main|themeSpooky
+    call #changeTheme|b|themeDangerousGuys
+    call #changeThemeNoLoop|l|themeVineBoom
+    call #changeThemeNoLoop|w|themeYouWon
+    call #changeTheme|m|themeSpooky
     
 quit
 
@@ -170,7 +193,7 @@ quit
 quit
 
 #retryBattleMusic
-    call #retryTheme|battle
+    call #retryTheme|b
 quit
 //runArgs: theme to regenerate
 #retryTheme
@@ -448,6 +471,7 @@ quit
 #magicHammerBattle
     call #shouldBeginBattle?
     
+    call #activateMagicSkull2
     call #setCurArena|defaultArena
     call #setCurEnemy|ghust
     call #startBattle
@@ -475,7 +499,7 @@ quit
 quit
 
 #startBattle
-    call #stopTheme|main
+    call #stopTheme|m
     set battling true
     set curTurn 0
     //delay 800
@@ -502,7 +526,7 @@ quit
     cmd tbot model enemy {{curEnemy}-model}
     delay 1000
     unfreeze
-    call #playTheme|battle
+    call #playTheme|b
     call #displayPlayerHealth|0
     call #displayEnemyHealth|0
     
@@ -520,14 +544,14 @@ quit
     cmd tbot summon enemy 0 0 0 0 0
 quit
 #winBattle
-    call #stopTheme|battle
-    call #playTheme|win
+    call #stopTheme|b
+    call #playTheme|w
     cpemsg announce &a{{curEnemy}-name} {{curEnemy}-outtroPhrase}
     call #explodeEnemy
     delay 1000
     call {{curEnemy}-defeat}
     delay 2000
-    newthread #fadeOutTheme|win
+    newthread #fadeOutTheme|w
     call #displayPlayerHealth|0
     set {curBattle}. true
     call #stopBattle|1
@@ -537,7 +561,7 @@ quit
     freeze
     
     delay 800
-    call #stopTheme|battle
+    call #stopTheme|b
     call #playTheme|lose
     delay 200
     cpemsg announce &cYou were defeated...
@@ -567,7 +591,7 @@ quit
     
     call #removeEnemyHealth
     unfreeze
-    call #playTheme|main
+    call #playTheme|m
     changemodel
     set battling false
 quit
@@ -955,8 +979,8 @@ quit
     jump #loseItemsLoop
     #loseItemsBreak
     
-    if itemsLost|>|0 msg &cYou lost your consumable supplies!
-    msg &aUpon defeat, consumable supplies can be found again. ▓
+    if itemsLost|>|0 msg &cYou lost your potions!
+    msg &aUpon defeat, potions can be found again. ▓
     call #restoreConsumableItems
 quit
 #loseItem
@@ -1280,10 +1304,16 @@ quit
     if player-totalSwings.|=| set player-totalSwings. 0
     if player-totalCoinsFound.|=| set player-totalCoinsFound. 0
 quit
-#displayPlayerStats
+#calcAverageBatDamage
     set player-averageBatDamage {player-totalSwingDamage.}
     ifnot player-totalSwings.|=|0 setdiv player-averageBatDamage player-totalSwings.
     setround player-averageBatDamage
+quit
+#displayPlayerStats
+    call #calcAverageBatDamage
+    //To prevent displaying nothing
+    if player-totalDeaths.|=| set player-totalDeaths. 0
+    if player-totalDamageTaken.|=| set player-totalDamageTaken. 0
     
     msg &a- Statistics! -
     delay 2000
@@ -1383,8 +1413,12 @@ quit
 //runArgs: amount of coins to get
 #reward
     set reward {runArg1}
-    setadd player-totalCoinsFound. reward
     cmd reward {reward}
+    
+    if gotChest-{MBX}-{MBY}-{MBZ} quit
+    set gotChest-{MBX}-{MBY}-{MBZ} true
+    
+    setadd player-totalCoinsFound. reward
 quit
 #defaultMaxDamageReaction
     msg &b{{curEnemy}-name} is reeling from your attack!
@@ -1405,7 +1439,7 @@ quit
     
     set ghist-model g+ghist
     set ghist-skin https://dl.dropbox.com/s/3ygjk4pwrfwc1ku/ghist.png
-    call #changeThemeBackground|battle|themeDangerousGuys
+    call #changeThemeBackground|b|themeDangerousGuys
     
     set ghist-maxHealth 50
     set ghist-curHealth {{curEnemy}-maxHealth}
@@ -1446,7 +1480,7 @@ quit
     
     set ghost-model g+ghost
     set ghost-skin https://dl.dropbox.com/s/1e1d5r3jyr2c2h3/ghost.png
-    call #changeThemeBackground|battle|themePepperSteak
+    call #changeThemeBackground|b|themePepperSteak
     
     set ghost-maxHealth 80
     set ghost-curHealth {{curEnemy}-maxHealth}
@@ -1485,7 +1519,7 @@ quit
     
     set ghust-model g+ghust
     set ghust-skin https://dl.dropbox.com/s/ykf2fmghzkx412c/ghust.png
-    call #changeThemeBackground|battle|themeMadRatDead
+    call #changeThemeBackground|b|themeMadRatDead
     
     set ghust-maxHealth 200
     set ghust-curHealth {{curEnemy}-maxHealth}
@@ -1514,7 +1548,7 @@ quit
     
     set foedoor-model g+foedoor
     set foedoor-skin https://dl.dropbox.com/s/ntfyzssq6kqx1pc/frontdoor.png
-    call #changeThemeBackground|battle|themeOtherworldlyOpponent
+    call #changeThemeBackground|b|themeOtherworldlyOpponent
     
     set foedoor-maxHealth 80
     set foedoor-curHealth {{curEnemy}-maxHealth}
@@ -1544,7 +1578,7 @@ quit
     
     set topjack-model g+topjack
     set topjack-skin https://dl.dropbox.com/s/35xyvdoc2c27cig/topJack.png
-    call #changeThemeBackground|battle|themeBackBeatBattle
+    call #changeThemeBackground|b|themeBackBeatBattle
     
     set topjack-maxHealth 120
     set topjack-curHealth {{curEnemy}-maxHealth}
@@ -1636,7 +1670,7 @@ quit
     
     set polterblast-model g+polterblast
     set polterblast-skin https://dl.dropbox.com/s/cxssgpiyyb53usn/polterblast.png
-    call #changeThemeBackground|battle|themeBattyTwist
+    call #changeThemeBackground|b|themeBattyTwist
     
     set polterblast-maxHealth 100
     set polterblast-curHealth {{curEnemy}-maxHealth}
@@ -1656,7 +1690,7 @@ quit
     call #damageEnemy|999
 quit
 #polterblastMaxDamageReaction
-    msg &b{{curEnemy}-name}'s fuse flame falters from your furious force!
+    msg &b{{curEnemy}-name}'s fuse flame falters from furious force!
     //call {polterblast-turn}
 quit
 #polterblastTick
@@ -1668,14 +1702,14 @@ quit
     if {curEnemy}-tick|=|0 jump #polterblastExplode
 quit
 #polterblastLastTick
-    msg cef pause -n battle
+    msg cef pause -n b
     delay 1000
-    msg cef speed -n battle 1.5
-    msg cef time -n battle 0
-    msg cef resume -n battle
+    msg cef speed -n b 1.5
+    msg cef time -n b 0
+    msg cef resume -n b
 quit
 #polterblastExplode
-    call #stopTheme|battle
+    call #stopTheme|b
     delay 1000
     msg &c{{curEnemy}-name} explodes!
     call #explodeEnemy
@@ -1693,7 +1727,7 @@ quit
     
     set armor-model g+armor
     set armor-skin https://dl.dropbox.com/s/ozeixayq5ghepmo/armor.png
-    call #changeThemeBackground|battle|themeAstonishingMarch
+    call #changeThemeBackground|b|themeAstonishingMarch
     
     set armor-maxHealth 100
     set armor-curHealth {{curEnemy}-maxHealth}
@@ -1784,7 +1818,7 @@ quit
     
     set dilehaunte-model g+dilehaunte
     set dilehaunte-skin https://dl.dropbox.com/s/4y88sm96w54lr4e/dilehaunte.png
-    call #changeThemeBackground|battle|themeMadRatHeart
+    call #changeThemeBackground|b|themeMadRatHeart
     
     set dilehaunte-maxHealth 200
     set dilehaunte-curHealth {{curEnemy}-maxHealth}
@@ -1876,7 +1910,7 @@ quit
     
     set shaun-model goodlyay+gun
     set shaun-skin https://dl.dropbox.com/s/1pxcrrzltcg5twy/shaun.png
-    call #changeThemeBackground|battle|themeLastSurprise
+    call #changeThemeBackground|b|themeLastSurprise
     
     set shaun-maxHealth 200
     set shaun-curHealth {{curEnemy}-maxHealth}
@@ -2009,7 +2043,7 @@ quit
     
     set shadowy-model g+shadowy
     set shadowy-skin https://dl.dropbox.com/s/ehjx4pdaffxywkz/bat.png
-    call #changeThemeBackground|battle|themeSilence
+    call #changeThemeBackground|b|themeSilence
     
     set shadowy-maxHealth 100
     set shadowy-curHealth {player-curHealth.}
@@ -2021,8 +2055,14 @@ quit
 #shadowyAttack
     msg &c{{curEnemy}-name} takes a swing at you!
     delay 1000
-    setrandrange shadowyDamage 3 5
+    
+    call #calcAverageBatDamage
+    set shadowyDamage {player-averageBatDamage}
+    setdiv shadowyDamage 10
+    setrounddown shadowyDamage
+    if shadowyDamage|<=|0 set shadowyDamage 1
     setmul shadowyDamage 10
+    
     call #damagePlayer|{shadowyDamage}
 quit
 
@@ -2168,7 +2208,7 @@ quit
 
 #enterHouse
     freeze
-    newthread #fadeOutTheme|main
+    newthread #fadeOutTheme|m
     set doorTilt 0
     set doorZ {origDoorZ}
     cmd tbot summon frontdoor {doorX} {doorY} {doorZ} 0 {doorTilt}
@@ -2184,7 +2224,7 @@ quit
     delay 1000
     call #genericLoop|#moveDoorLoop|16|50
     call #fadeToBlack
-    call #changeTheme|main|themeHouse
+    call #changeTheme|m|themeHouse
     delay 1000
     cmd tpp 8192 2048 3600 0 0
     delay 500
@@ -2193,13 +2233,13 @@ quit
     unfreeze
     changemodel
     cpemsg announce &bShaun's House?
-    call #playTheme|main
+    call #playTheme|m
     call #setSpawnAtFrontDoor
     
     //save v
     set temp #setSpawnAtFrontDoor
     call #addLoadSaveAction|temp
-    set temp #changeTheme|main|themeHouse
+    set temp #changeTheme|m|themeHouse
     call #addLoadSaveAction|temp
     //save ^
     
@@ -2238,9 +2278,9 @@ quit
     msg |
     msg |
     set creditsDelay 2000
-    call #stopTheme|main
-    call #changeThemeNoLoop|win|themeEnd
-    call #playTheme|win
+    call #stopTheme|m
+    call #changeThemeNoLoop|w|themeEnd
+    call #playTheme|w
     call #fadeToWhite
     cmd tp 255 64 110
     delay 2000
@@ -2263,7 +2303,7 @@ quit
     delay 250
     if cef call #cefCredits
     call #displayPlayerStats
-    if cef call #fadeOutThemeLong|win
+    if cef call #fadeOutThemeLong|w
     delay 1000
     cpemsg announce &6┴~ THE END ~┴
     delay 2000
@@ -2652,8 +2692,8 @@ quit
     setadd chairCutsceneTimesSeen 1
     
     
-    call #changeThemeBackground|battle|themeGhostTalk
-    call #stopTheme|main
+    call #changeThemeBackground|b|themeGhostTalk
+    call #stopTheme|m
     freeze
     changemodel invisible
     cmd boost 0 1 0 1 1 1
@@ -2671,15 +2711,15 @@ quit
     delay 1000
     call #ghostRise
     delay 800
-    call #playTheme|battle
+    call #playTheme|b
     delay 1000
     call #dileIntro
 quit
 #chairCutsceneEnd
     unfreeze
     call #turnChairBack
-    call #fadeOutTheme|battle
-    call #playTheme|main
+    call #fadeOutTheme|b
+    call #playTheme|m
 quit
 #resetChair
     set ghostY 61
@@ -3010,7 +3050,7 @@ quit
     if shaunCutscene quit
     set shaunCutscene true
     
-    call #stopTheme|main
+    call #stopTheme|m
     freeze
     changemodel invisible
     delay 1000
@@ -3168,6 +3208,50 @@ quit
     tempblock interest 279 40 189
 quit
 
+
+
+#activateMagicSkull2
+    if magicSkullActivated2 quit
+    
+    call #_activateMagicSkull2
+    
+    set temp #_activateMagicSkull2
+    call #addLoadSaveAction|temp
+quit
+#_activateMagicSkull2
+    set magicSkullActivated2 true
+    tempblock interest 259 40 169
+quit
+
+#magicSkull2
+    ifnot magicSkullActivated2 quit
+    if talkingMagicSkull2 quit
+    set talkingMagicSkull2 true
+    tempblock air 259 40 169
+    freeze
+    changemodel invisible
+    msg &[Skull: &xOh I know that look. That's the look of someone who does NOT want to do more parkour.
+    delay msgDelay
+    msg &[Skull: &xAs a skull, I have no stake in this ghost coin business. How's about I help you get across?
+    reply 1|&xTouch the skull|#skullTP2
+    reply 2|&xDo not touch|#noSkullTP2
+quit
+#skullTP2
+    cmd tp 283 40 184 180 11
+    delay 1000
+    unfreeze
+    changemodel
+    set talkingMagicSkull2 false
+    tempblock interest 259 40 169
+quit
+#noSkullTP2
+    msg &[Skull: &xWell shucks. Here I thought you'd be excited about touching an ominous magic talking skull.
+    delay 1000
+    set talkingMagicSkull2
+    unfreeze
+    changemodel
+    tempblock interest 259 40 169
+quit
 
 
 
