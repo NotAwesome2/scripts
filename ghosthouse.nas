@@ -1,50 +1,12 @@
-//allowcef
+include libs/savelib
+include libs/ceflib
+include libs/basiclib
+using cef
 
 #accessControl
     ifnot canAccess. msg You must &b/goto pestcontrol &Sbefore you can access &4ghosthouse&S.
     ifnot canAccess. set denyAccess true
     ifnot canAccess. quit
-quit
-
-//runArgs: package that contains label/runargs to call upon save loaded
-#addLoadSaveAction
-    if loadSaveActions-count.|=| set loadSaveActions-count. 0
-    set loadSaveActions[{loadSaveActions-count.}]. {{runArg1}}
-    //show loadSaveActions[{loadSaveActions-count.}].
-    setadd loadSaveActions-count. 1
-quit
-#runLoadSaveActions
-    if loadSaveActions-count.|=|0 quit
-    set lsai 0
-    #runLoadSaveActionsLoop
-        call {loadSaveActions[{lsai}].}
-        //msg [{lsai}] {loadSaveActions[{lsai}].}
-        setadd lsai 1
-    ifnot lsai|>=|loadSaveActions-count. jump #runLoadSaveActionsLoop
-quit
-#loadSave
-    msg &bLoading your save...
-    call #runLoadSaveActions
-    //delay 1000
-    call #respawnPlayer
-    call #playTheme|m
-    msg &bSave loaded.
-quit
-
-#resetSave
-    item take MAGIC_HAMMER
-    resetdata saved #*Battle.
-    resetdata saved loadSaveActions*
-    resetdata saved #unlock*
-    resetdata saved player-total*
-    set player-curHealth. {player-maxHealth}
-    //msg Reset your save.
-quit
-
-#newGame
-    call #resetSave
-    call #respawnPlayer
-    call #playTheme|m
 quit
 
 #spawnMB
@@ -55,7 +17,6 @@ quit
     set defaultFogColor FFDDB5
     set defaultSkyColor 010C42
     set defaultShadowColor 5E5E99
-    
     
     cmd tbot add enemy 0 0 0 0 0 Ninja &f
     
@@ -78,7 +39,7 @@ quit
     cmd tbot model shaun humanoid
     
     
-    call #arenaSetup
+    call #arenasSetup
     call #playerSetup
     call #skillSetup
     call #menusSetup
@@ -99,10 +60,32 @@ quit
     set hammah hammah
     set crowbar crowbar
     
-    if loadSaveActions-count.|=|0 jump #newGame
     
-    reply 1|&bContinue from save|#loadSave
-    reply 3|&aNew game|#newGame
+    call #save.spawnMB|#loadSave|#newGame
+quit
+
+#loadSave
+    call #save.load
+    //delay 1000
+    call #respawnPlayer
+    call #cef.playTheme|m
+quit
+
+#newGame
+    call #resetSave
+    call #respawnPlayer
+    call #cef.playTheme|m
+quit
+
+#resetSave
+    call #save.reset
+    item take MAGIC_HAMMER
+    resetdata saved #*Battle.
+    resetdata saved #unlock*
+    resetdata saved player-total*
+    set player-curHealth. {player-maxHealth}
+    //msg Reset your save.
+    set noSaveRun true
 quit
 
 #trunk
@@ -146,7 +129,7 @@ quit
     //set themeEnd https://youtu.be/Qls9xNJ_dyQ
     
     set themeSilence https://files.catbox.moe/cclgq2.mp3
-    set themeSilence-volume 2
+    set themeSilence.volume 2
     set themeDangerousGuys https://files.catbox.moe/wf20g2.mp3
     set themeVineBoom https://files.catbox.moe/ywgkvi.mp3
     set themeYouWon https://files.catbox.moe/f9yag2.mp3
@@ -159,130 +142,48 @@ quit
     set themeBattyTwist https://files.catbox.moe/20w0a6.mp3
     set themeAstonishingMarch https://files.catbox.moe/vdbaym.mp3
     set themeGhostTalk https://files.catbox.moe/2kqb03.mp3
-    set themeGhostTalk-volume 0.5
+    set themeGhostTalk.volume 0.5
+    
     
     set themeSpooky https://files.catbox.moe/ui341t.mp3
-    set themeSpooky-volume 0.6
+    set themeSpooky.volume 0.6
     set themeHouse https://files.catbox.moe/04p4mn.mp3
-    set themeHouse-volume 0.6
+    set themeHouse.volume 0.6
     
     set themeEnd https://files.catbox.moe/gog7xf.mp3
     
-    call #changeTheme|b|themeDangerousGuys
-    call #changeThemeNoLoop|l|themeVineBoom
-    call #changeThemeNoLoop|w|themeYouWon
-    call #changeTheme|m|themeSpooky
+    call #cef.changeTheme|b|themeDangerousGuys
+    call #cef.changeThemeNoLoop|l|themeVineBoom
+    call #cef.changeThemeNoLoop|w|themeYouWon
+    call #cef.changeTheme|m|themeSpooky
     
 quit
 
-//runArgs: theme to change, url to change to
-#changeTheme
-    msg cef create -n {runArg1} -glasq {{runArg2}}
-    set {runArg1}-volume {{runArg2}-volume}
-    set {runArg1}-url {{runArg2}}
-quit
-//runArgs: theme to change, url to change to
-#changeThemeBackground
-    msg cef -b create -n {runArg1} -glasq {{runArg2}}
-    set {runArg1}-volume {{runArg2}-volume}
-    set {runArg1}-url {{runArg2}}
-quit
-#changeThemeNoLoop
-    msg cef create -n {runArg1} -gasq {{runArg2}}
-    set {runArg1}-volume {{runArg2}-volume}
-quit
-
-#retryBattleMusic
-    call #retryTheme|b
-quit
-//runArgs: theme to regenerate
-#retryTheme
-    msg cef remove -n {runArg1}
-    delay 500
-    call #changeTheme|{runArg1}|{runArg1}-url
-    delay 2000
-    call #playTheme|{runArg1}
-quit
-
-//runArgs: theme to play
-#playTheme
-    msg cef speed -n {runArg1} 1
-    msg cef time -n {runArg1} 0
-    set volume {{runArg1}-volume}
-    if volume|=| set volume 1
-    setdiv volume 2
-    
-    msg cef volume -n {runArg1} -g {volume}
-    //msg cef resume -n {runArg1}
-quit
-#fadeOutTheme
-    msg cef fade {volume} 0 0.5 -n {runArg1}
-    delay 1500
-    msg cef pause -n {runArg1}
-quit
-#fadeOutThemeLong
-    msg cef fade {volume} 0 3 -n {runArg1}
-    delay 3000
-    msg cef pause -n {runArg1}
-quit
-#stopTheme
-    msg cef pause -n {runArg1}
-quit
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------- ARENA METHODS ----------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------
 
-#arenaSetup
-    call #defaultArenaSetup
-    call #ghostCoinArenaSetup
-    call #mirroArenaSetup
+#arenasSetup
+    call #arenaSetup|defaultArena|8528 7168 304 0 0|266 224 3|180 0
+    call #arenaSetup|ghostCoinArena|9024 7168 512 0 0|281.5 224 10.5|180 0
+    call #arenaSetup|mirrorArena|7792 7168 1520 0 0|243 224 41|180 0
 quit
 //runaArgs: name of arena to set to
 #setCurArena
     set curArena {runArg1}
 quit
 
-#defaultArenaSetup
-    set defaultArena-playerLocation 8528 7168 304 0 0
-    
-    set defaultArena-tbotX 266 
-    set defaultArena-tbotY 224
-    set defaultArena-tbotZ 3 
-    set defaultArena-tbotDir 180 0
-    set defaultArena-tbotCoords {defaultArena-tbotX} {defaultArena-tbotY} {defaultArena-tbotZ}
-    set defaultArena-tbotLocation {defaultArena-tbotCoords} {defaultArena-tbotDir}
-    setadd defaultArena-tbotY 1
-    set defaultArena-tbotCoordsJump {defaultArena-tbotX} {defaultArena-tbotY} {defaultArena-tbotZ}
-    setadd defaultArena-tbotY -1
-quit
-
-#ghostCoinArenaSetup
-    set ghostCoinArena-playerLocation 9024 7168 512 0 0
-    
-    set ghostCoinArena-tbotX 281.5 
-    set ghostCoinArena-tbotY 224
-    set ghostCoinArena-tbotZ 10.5
-    set ghostCoinArena-tbotDir 180 0
-    set ghostCoinArena-tbotCoords {ghostCoinArena-tbotX} {ghostCoinArena-tbotY} {ghostCoinArena-tbotZ}
-    set ghostCoinArena-tbotLocation {ghostCoinArena-tbotCoords} {ghostCoinArena-tbotDir}
-    setadd ghostCoinArena-tbotY 1
-    set ghostCoinArena-tbotCoordsJump {ghostCoinArena-tbotX} {ghostCoinArena-tbotY} {ghostCoinArena-tbotZ}
-    setadd ghostCoinArena-tbotY -1
-quit
-
-#mirroArenaSetup
-    set mirrorArena-playerLocation 7792 7168 1520 0 0
-    
-    set mirrorArena-tbotX 243
-    set mirrorArena-tbotY 224
-    set mirrorArena-tbotZ 41
-    set mirrorArena-tbotDir 180 0
-    set mirrorArena-tbotCoords {mirrorArena-tbotX} {mirrorArena-tbotY} {mirrorArena-tbotZ}
-    set mirrorArena-tbotLocation {mirrorArena-tbotCoords} {mirrorArena-tbotDir}
-    setadd mirrorArena-tbotY 1
-    set mirrorArena-tbotCoordsJump {mirrorArena-tbotX} {mirrorArena-tbotY} {mirrorArena-tbotZ}
-    setadd mirrorArena-tbotY -1
+//runArgs: arena name, player tpp, tbot coords, tbot yaw pitch
+#arenaSetup
+    set curArenaName {runArg1}
+    set {curArenaName}-playerLocation {runArg2}
+    set {curArenaName}-tbotCoords {runArg3}
+    set {curArenaName}-tbotCoordsJump {runArg3}
+    set {curArenaName}-tbotDir {runArg4}
+    call #Coord.Add|{curArenaName}-tbotCoordsJump|y|1
+    //clear temp value
+    set curArenaName
 quit
 
 #restoreDefaultEnv
@@ -399,7 +300,7 @@ quit
     call #defaultEnemyDefeat|8
     
     set temp #_foedoorDefeat
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     #_foedoorDefeat
     tempchunk 234 54 87 237 60 90 234 63 87
@@ -416,7 +317,7 @@ quit
     call #defaultEnemyDefeat|8
     
     set temp #_foedoorBasementDefeat
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     #_foedoorBasementDefeat
     tempblock air 275 54 162
@@ -445,7 +346,7 @@ quit
     call #defaultEnemyDefeat|10
     
     set temp #_armoryDefeat
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     #_armoryDefeat
     cmd tbot remove armor
@@ -499,11 +400,11 @@ quit
 quit
 
 #startBattle
-    call #stopTheme|m
+    call #cef.stopTheme|m
     set battling true
     set curTurn 0
     //delay 800
-    cmd tbot summon enemy {{curArena}-tbotLocation}
+    cmd tbot summon enemy {{curArena}-tbotCoords} {{curArena}-tbotDir}
     cmd tbot skin enemy {{curEnemy}-skin}
     
     set overworldLocation {MBCoords} {PlayerYaw} {PlayerPitch}
@@ -526,7 +427,7 @@ quit
     cmd tbot model enemy {{curEnemy}-model}
     delay 1000
     unfreeze
-    call #playTheme|b
+    call #cef.playTheme|b
     call #displayPlayerHealth|0
     call #displayEnemyHealth|0
     
@@ -541,17 +442,17 @@ quit
 
 #explodeEnemy
     cmd effect explosion {{curArena}-tbotCoordsJump} 0 0 0
-    cmd tbot summon enemy 0 0 0 0 0
+    cmd tbot tp enemy 0 0 0 0 0
 quit
 #winBattle
-    call #stopTheme|b
-    call #playTheme|w
+    call #cef.stopTheme|b
+    call #cef.playTheme|w
     cpemsg announce &a{{curEnemy}-name} {{curEnemy}-outtroPhrase}
     call #explodeEnemy
     delay 1000
     call {{curEnemy}-defeat}
     delay 2000
-    newthread #fadeOutTheme|w
+    newthread #cef.fadeOutTheme|w
     call #displayPlayerHealth|0
     set {curBattle}. true
     call #stopBattle|1
@@ -561,8 +462,8 @@ quit
     freeze
     
     delay 800
-    call #stopTheme|b
-    call #playTheme|lose
+    call #cef.stopTheme|b
+    call #cef.playTheme|l
     delay 200
     cpemsg announce &cYou were defeated...
     setadd player-totalDeaths. 1
@@ -591,7 +492,7 @@ quit
     
     call #removeEnemyHealth
     unfreeze
-    call #playTheme|m
+    call #cef.playTheme|m
     changemodel
     set battling false
 quit
@@ -784,6 +685,7 @@ quit
     if player-curHealth.|>=|player-maxHealth msg You already have full health! Potion was not used.
     if player-curHealth.|>=|player-maxHealth quit
     
+    setadd redPotion-timesUsed 1
     msg You drink the red potion. Yeeucky!
     msg It restores &a50 &Shealth!
     setadd redPotion-count -1
@@ -793,6 +695,7 @@ quit
     call #displayPlayerHealth|-50
 quit
 #yellowPotion-use
+    setadd yellowPotion-timesUsed 1
     setadd yellowPotion-count -1
     msg You drink the yellow potion. Zesty!
     delay 1000
@@ -881,7 +784,7 @@ quit
     msg Use &b/input supplies &Sto see them all.
     
     set temp #_getReuseableItem|{item}
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
 quit
 #_getReuseableItem
     set {runArg1}-count 1
@@ -997,15 +900,15 @@ quit
 
 #inputSetup
     // definehotkey [input args]|[key name]|<list of space separated modifiers>
-    definehotkey I|I
-    definehotkey O|O
-    definehotkey K|K
-    definehotkey L|L
+    definehotkey Menu1|I
+    definehotkey Menu2|O
+    definehotkey Menu3|K
+    definehotkey Menu4|L
     
-    set I I
-    set O O
-    set K K
-    set L L
+    set I Menu1
+    set O Menu2
+    set K Menu3
+    set L Menu4
     set supplies supplies
     set heal heal
 quit
@@ -1026,10 +929,16 @@ quit
     if runArg1|=|supplies goto #displayItems
     if runArg1|=|heal goto #tryHealOutBattle
     ifnot canAct jump #inputExit
+    
+    //Duplicate literals for mobile "press I" support
     if runArg1|=|I goto {{curMenu}-actionI}
+    if runArg1|=|"I" goto {{curMenu}-actionI}
     if runArg1|=|O goto {{curMenu}-actionO}
+    if runArg1|=|"O" goto {{curMenu}-actionO}
     if runArg1|=|K goto {{curMenu}-actionK}
+    if runArg1|=|"K" goto {{curMenu}-actionK}
     if runArg1|=|L goto {{curMenu}-actionL}
+    if runArg1|=|"L" goto {{curMenu}-actionL}
     
     msg Unrecognized fight action "{runArg1}"
 quit
@@ -1160,7 +1069,6 @@ quit
     if index|=|totalSkillLayersMinusOne quit
     jump #shuffL
     quit
-    
 quit
 
 #skillPop
@@ -1330,6 +1238,18 @@ quit
     msg Total coins discovered:&6 {player-totalCoinsFound.}
     delay 2000
 quit
+#giveAwards
+    ifnot noSaveRun quit
+    if player-totalDeaths.|=|0 award Ghost House|No One Beats Pete's
+    call #giveAwardWater
+    if player-totalDamageTaken.|=|0 award Ghost House|Untouchable
+quit
+#giveAwardWater
+    ifnot player-totalDeaths.|=|0 quit
+    ifnot redPotion-timesUsed|=|0 quit
+    ifnot yellowPotion-timesUsed|=|0 quit
+    award Ghost House|Just Water Please
+quit
 #playerPostBattle
     //offense/defense used to be reset here but it was removed
 quit
@@ -1363,13 +1283,59 @@ quit
     cpemsg announce
     msg {{curEnemy}-name} takes &c{damage} &Sdamage!
     call #displayEnemyHealth|{damage}
+    
+    //Hardcoded bump damage on death for snappier timing
+    if {curEnemy}-curHealth|<=|0 call #bumpEnemy|20|false
     if {curEnemy}-curHealth|<=|0 goto #winBattle
-    if damage|>|0 newthread #bumpEnemy
+    
+    if damage|>|0 newthread #bumpEnemy|{damage}|true
 quit
+//runargs: bump damage, boolean scale bump down over the anim
 #bumpEnemy
-    cmd tbot summon enemy {{curArena}-tbotCoordsJump} {{curArena}-tbotDir}
-    delay 100
+    set bumpDamage {runArg1}
+    set scaleBump {runArg2}
+    set bumpSide 1
+    set bumpLoopCount {bumpDamage}
+    setdiv bumpLoopCount 2
+    setroundup bumpLoopCount
+    set bumpLoopCountHalf {bumpLoopCount}
+    setdiv bumpLoopCountHalf 2
+    
+    cmd tbot rot enemy x -20
+    call #Loop|#bumpEnemyLoop|{bumpLoopCount}|50
+    cmd tbot rot enemy x 0
     cmd tbot summon enemy {{curArena}-tbotCoords} {{curArena}-tbotDir}
+quit
+#bumpEnemyLoop
+    
+    set bumpCoords {{curArena}-tbotCoords}
+    
+    set bumpCompleteness 1
+    setdiv bumpCompleteness bumpLoopCount
+    setmul bumpCompleteness index
+    ifnot scaleBump set bumpCompleteness 0
+    
+    //Invert completeness -- at start, 1, at end, 0
+    set bumpIntensity 1
+    setsub bumpIntensity bumpCompleteness
+    
+    
+    setmul bumpIntensity bumpSide
+    setmul bumpIntensity 0.25
+    //Flip the side it TPs on for next time
+    setmul bumpSide -1
+    
+    call #Coord.Add|bumpCoords|x|{bumpIntensity}
+    
+    cmd tbot tp enemy {bumpCoords} {{curArena}-tbotDir}
+    
+    //Exit the loop halfway through if the enemy is dead
+    set overHalfway false
+    if index|>=|bumpLoopCountHalf set overHalfway true
+    set exitEarly true
+    if {curEnemy}-curHealth|>|0 set exitEarly false
+    ifnot overHalfway set exitEarly false
+    if exitEarly jump #LoopBreak
 quit
 
 // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1439,7 +1405,7 @@ quit
     
     set ghist-model g+ghist
     set ghist-skin https://dl.dropbox.com/s/3ygjk4pwrfwc1ku/ghist.png
-    call #changeThemeBackground|b|themeDangerousGuys
+    call #cef.changeThemeBackground|b|themeDangerousGuys
     
     set ghist-maxHealth 50
     set ghist-curHealth {{curEnemy}-maxHealth}
@@ -1480,7 +1446,7 @@ quit
     
     set ghost-model g+ghost
     set ghost-skin https://dl.dropbox.com/s/1e1d5r3jyr2c2h3/ghost.png
-    call #changeThemeBackground|b|themePepperSteak
+    call #cef.changeThemeBackground|b|themePepperSteak
     
     set ghost-maxHealth 80
     set ghost-curHealth {{curEnemy}-maxHealth}
@@ -1519,7 +1485,7 @@ quit
     
     set ghust-model g+ghust
     set ghust-skin https://dl.dropbox.com/s/ykf2fmghzkx412c/ghust.png
-    call #changeThemeBackground|b|themeMadRatDead
+    call #cef.changeThemeBackground|b|themeMadRatDead
     
     set ghust-maxHealth 200
     set ghust-curHealth {{curEnemy}-maxHealth}
@@ -1548,7 +1514,7 @@ quit
     
     set foedoor-model g+foedoor
     set foedoor-skin https://dl.dropbox.com/s/ntfyzssq6kqx1pc/frontdoor.png
-    call #changeThemeBackground|b|themeOtherworldlyOpponent
+    call #cef.changeThemeBackground|b|themeOtherworldlyOpponent
     
     set foedoor-maxHealth 80
     set foedoor-curHealth {{curEnemy}-maxHealth}
@@ -1578,7 +1544,7 @@ quit
     
     set topjack-model g+topjack
     set topjack-skin https://dl.dropbox.com/s/35xyvdoc2c27cig/topJack.png
-    call #changeThemeBackground|b|themeBackBeatBattle
+    call #cef.changeThemeBackground|b|themeBackBeatBattle
     
     set topjack-maxHealth 120
     set topjack-curHealth {{curEnemy}-maxHealth}
@@ -1670,7 +1636,7 @@ quit
     
     set polterblast-model g+polterblast
     set polterblast-skin https://dl.dropbox.com/s/cxssgpiyyb53usn/polterblast.png
-    call #changeThemeBackground|b|themeBattyTwist
+    call #cef.changeThemeBackground|b|themeBattyTwist
     
     set polterblast-maxHealth 100
     set polterblast-curHealth {{curEnemy}-maxHealth}
@@ -1709,7 +1675,7 @@ quit
     msg cef resume -n b
 quit
 #polterblastExplode
-    call #stopTheme|b
+    call #cef.stopTheme|b
     delay 1000
     msg &c{{curEnemy}-name} explodes!
     call #explodeEnemy
@@ -1727,7 +1693,7 @@ quit
     
     set armor-model g+armor
     set armor-skin https://dl.dropbox.com/s/ozeixayq5ghepmo/armor.png
-    call #changeThemeBackground|b|themeAstonishingMarch
+    call #cef.changeThemeBackground|b|themeAstonishingMarch
     
     set armor-maxHealth 100
     set armor-curHealth {{curEnemy}-maxHealth}
@@ -1806,7 +1772,7 @@ quit
     //cmd tempbot summon dilehaunte 0 0 0 0 0
     
     set temp #turnChairBack
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     call #turnChairBack
 quit
@@ -1818,7 +1784,7 @@ quit
     
     set dilehaunte-model g+dilehaunte
     set dilehaunte-skin https://dl.dropbox.com/s/4y88sm96w54lr4e/dilehaunte.png
-    call #changeThemeBackground|b|themeMadRatHeart
+    call #cef.changeThemeBackground|b|themeMadRatHeart
     
     set dilehaunte-maxHealth 200
     set dilehaunte-curHealth {{curEnemy}-maxHealth}
@@ -1872,7 +1838,7 @@ quit
     call #_shaunDefeat
     
     set temp #_shaunDefeat
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
 quit
 #_shaunDefeat
     set shaunAtDoor false
@@ -1910,7 +1876,7 @@ quit
     
     set shaun-model goodlyay+gun
     set shaun-skin https://dl.dropbox.com/s/1pxcrrzltcg5twy/shaun.png
-    call #changeThemeBackground|b|themeLastSurprise
+    call #cef.changeThemeBackground|b|themeLastSurprise
     
     set shaun-maxHealth 200
     set shaun-curHealth {{curEnemy}-maxHealth}
@@ -2043,7 +2009,7 @@ quit
     
     set shadowy-model g+shadowy
     set shadowy-skin https://dl.dropbox.com/s/ehjx4pdaffxywkz/bat.png
-    call #changeThemeBackground|b|themeSilence
+    call #cef.changeThemeBackground|b|themeSilence
     
     set shadowy-maxHealth 100
     set shadowy-curHealth {player-curHealth.}
@@ -2191,24 +2157,9 @@ quit
     set decidingDoor false
 quit
 
-//runArgs: label to call, total times to loop, delay between loops
-#genericLoop
-    set labelToCall {runArg1}
-    set loopCount {runArg2}
-    set loopDelay {runArg3}
-    
-    set index 0
-    #genericLoopStart
-        call {labelToCall}|{index}
-        delay loopDelay
-        setadd index 1
-        if index|<|loopCount jump #genericLoopStart
-    quit
-quit
-
 #enterHouse
     freeze
-    newthread #fadeOutTheme|m
+    newthread #cef.fadeOutTheme|m
     set doorTilt 0
     set doorZ {origDoorZ}
     cmd tbot summon frontdoor {doorX} {doorY} {doorZ} 0 {doorTilt}
@@ -2220,11 +2171,11 @@ quit
     
     cmd tpp 8192 5280 3760 0 0
     delay 1000
-    call #genericLoop|#openDoorLoop|9|100
+    call #Loop|#openDoorLoop|9|100
     delay 1000
-    call #genericLoop|#moveDoorLoop|16|50
+    call #Loop|#moveDoorLoop|16|50
     call #fadeToBlack
-    call #changeTheme|m|themeHouse
+    call #cef.changeTheme|m|themeHouse
     delay 1000
     cmd tpp 8192 2048 3600 0 0
     delay 500
@@ -2233,14 +2184,14 @@ quit
     unfreeze
     changemodel
     cpemsg announce &bShaun's House?
-    call #playTheme|m
+    call #cef.playTheme|m
     call #setSpawnAtFrontDoor
     
     //save v
     set temp #setSpawnAtFrontDoor
-    call #addLoadSaveAction|temp
-    set temp #changeTheme|m|themeHouse
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
+    set temp #cef.changeTheme|m|themeHouse
+    call #save.addAction|temp
     //save ^
     
     call #setSpawnAtFrontDoor
@@ -2278,9 +2229,9 @@ quit
     msg |
     msg |
     set creditsDelay 2000
-    call #stopTheme|m
-    call #changeThemeNoLoop|w|themeEnd
-    call #playTheme|w
+    call #cef.stopTheme|m
+    call #cef.changeThemeNoLoop|w|themeEnd
+    call #cef.playTheme|w
     call #fadeToWhite
     cmd tp 255 64 110
     delay 2000
@@ -2303,10 +2254,11 @@ quit
     delay 250
     if cef call #cefCredits
     call #displayPlayerStats
-    if cef call #fadeOutThemeLong|w
+    if cef call #cef.fadeOutThemeLong|w
     delay 1000
     cpemsg announce &6┴~ THE END ~┴
     delay 2000
+    call #giveAwards
     cmd main
 quit
 #cefCredits
@@ -2516,7 +2468,7 @@ quit
 
     if {runArg0}. quit
     set temp #_unlockDoorWE|248|64|100
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2528,7 +2480,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorWE|262|64|100
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2540,7 +2492,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|246|73|93
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2551,7 +2503,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorWE|253|64|91
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2570,7 +2522,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|258|64|83
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2586,7 +2538,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorWE|270|64|86
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2600,7 +2552,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|246|73|83
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2612,7 +2564,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|265|73|83
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2623,9 +2575,9 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|260|58|99
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     set temp #unlockBasement2
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
     
@@ -2659,7 +2611,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorWE|262|54|165
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2671,7 +2623,7 @@ quit
     
     if {runArg0}. quit
     set temp #_unlockDoorNS|265|64|103
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     set {runArg0}. true
 quit
@@ -2692,8 +2644,8 @@ quit
     setadd chairCutsceneTimesSeen 1
     
     
-    call #changeThemeBackground|b|themeGhostTalk
-    call #stopTheme|m
+    call #cef.changeThemeBackground|b|themeGhostTalk
+    call #cef.stopTheme|m
     freeze
     changemodel invisible
     cmd boost 0 1 0 1 1 1
@@ -2711,15 +2663,15 @@ quit
     delay 1000
     call #ghostRise
     delay 800
-    call #playTheme|b
+    call #cef.playTheme|b
     delay 1000
     call #dileIntro
 quit
 #chairCutsceneEnd
     unfreeze
     call #turnChairBack
-    call #fadeOutTheme|b
-    call #playTheme|m
+    call #cef.fadeOutTheme|b
+    call #cef.playTheme|m
 quit
 #resetChair
     set ghostY 61
@@ -2745,7 +2697,7 @@ quit
 #ghostRise
     set ghostY 61
     cmd tbot summon dilehaunte 286 {ghostY} 78 270 0
-    call #genericLoop|#ghostMoveUp|24|64
+    call #Loop|#ghostMoveUp|24|64
 quit
 #ghostMoveUp
     setadd ghostY 0.125
@@ -2887,7 +2839,7 @@ quit
     cmd effect explosionsteam 286 64 78 0 0 0
     call #eraseDilehaunte
     set temp #eraseDilehaunte
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     delay 2000
     msg &]Dilehaunte: &xAt your service.
@@ -2968,7 +2920,7 @@ quit
     if ghostCoinGlassBroken jump #ghostCoin
     if item MAGIC_HAMMER jump #breakGhostCoinGlass
     freeze
-    msg Seems to be some kind of magical barrier.
+    msg A strange barrier of some sort.
     if #dilehaunteBattle. delay 1000
     if #dilehaunteBattle. msg According to Dilehaunte, this coin should allow me to escape.
     if #dilehaunteBattle. msg Is there an artifact in this house capable of breaking it?
@@ -2982,9 +2934,9 @@ quit
     call #_ghostCoin
     
     set temp #_ghostCoin
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     set temp #moveShaunToDoorInstantly
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     msg Found a supply: {ghostCoin-name}&S!
     msg Use &b/input supplies &Sto see them all.
@@ -3007,7 +2959,7 @@ quit
     call #_breakGhostCoinGlass
     
     set temp #_breakGhostCoinGlass
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
     
     delay 50
     cmd effect explosionsteam 255.5 74.5 114.5 0 0 0
@@ -3050,7 +3002,7 @@ quit
     if shaunCutscene quit
     set shaunCutscene true
     
-    call #stopTheme|m
+    call #cef.stopTheme|m
     freeze
     changemodel invisible
     delay 1000
@@ -3072,6 +3024,7 @@ quit
     delay 1000
     reply 1|&bYou: &xI'd like to be paid for my time first.|#replyPaid
     reply 2|&bYou: &xIt doesn't belong to you.|#replyNo
+    if item GHOST_COIN reply 3|&bYou: &xI'm going to lay you out.|#replyLayOut
     //unfreeze
     //changemodel
 quit
@@ -3097,6 +3050,14 @@ quit
 #replyClapBack
     msg &bYou: &xI'd like to see you try.
     delay 1000
+    call #startShaunBattle
+quit
+#replyLayOut
+    msg &bYou: &xI'm going to lay you out.
+    delay 1000
+    call #startShaunBattle
+quit
+#startShaunBattle
     set curBattle #shaunBattle
     call #setCurArena|defaultArena
     call #setCurEnemy|shaun
@@ -3105,8 +3066,6 @@ quit
     //in case player dies the cutscene has to be turned off so it can play again
     set shaunCutscene false
 quit
-
-
 
 #answerChestRiddle
     ifnot gotRiddleHint quit
@@ -3216,7 +3175,7 @@ quit
     call #_activateMagicSkull2
     
     set temp #_activateMagicSkull2
-    call #addLoadSaveAction|temp
+    call #save.addAction|temp
 quit
 #_activateMagicSkull2
     set magicSkullActivated2 true
