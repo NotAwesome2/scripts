@@ -1,10 +1,10 @@
+include libs/basiclib
 
 
 #explain
     tempblock air {MBCoords}
     msg |
     msg Welcome to Minesweeper! Click the &agreen button&S to get started.
-    msg The &eyellow&S and &oorange&S buttons change your click mode to &xclear&S a tile or &xflag&S a tile, respectively.
     delay 1000
     tempblock speech {MBCoords}
     
@@ -45,7 +45,6 @@ quit
 quit
 
 
-
 #input
     if runArg1|=|InputMode.Clear goto #setInputMode|clear
     if runArg1|=|InputMode.Flag goto #setInputMode|flag
@@ -63,6 +62,7 @@ quit
 quit
 
 #startGame
+    clickevent sync register #click 
     //runargs: board x and y length
     set BOARD_X_MAX {runArg1}
     set BOARD_Y_MAX {runArg2}
@@ -89,22 +89,16 @@ quit
     set curTotalCoveredSafeSpaces 0
     set hasMoved false
     
-    call #2Dloop|0|0|{BOARD_X_MAX}|{BOARD_Y_MAX}|#setupTile
+    call #Loop2D|#setupTile|0|0|{BOARD_X_MAX}|{BOARD_Y_MAX}
     cpemsg bot1 ☻
     cpemsg bot3
     //cpemsg bot3 Tiles left: &x{curTotalCoveredSafeSpaces}
     set gameState {GameState.Playing}
     msg Game setup!
-    call #defineHotkeys
+    msg Left click to &xclear a tile&S.
+    msg Right click to &xflag a tile&S.
     //msg Clear all the tiles that don't have mines under them to win.
     //msg The number in a cleared tile tells you how many mines are next to the tile, counting diagonals.
-quit
-
-#defineHotkeys
-    msg Press the &bV&S key to to enter &xflag&S mode
-    msg Press the &b~&S key to to enter &xclear&S mode
-    definehotkey flag|V
-    definehotkey clear|GRAVE
 quit
 
 
@@ -122,6 +116,11 @@ quit
     if gameState|=|GameState.Losing quit
     if gameState|=|GameState.Lost msg The game is over.
     if gameState|=|GameState.Lost quit
+    
+    //     click.button
+    //         This can have the value of Left, Right, or Middle
+    if click.button|=|"Left" set inputMode {InputMode.Clear}
+    if click.button|=|"Right" set inputMode {InputMode.Flag}
     call #clickAt|{MBX}|{MBY}
 quit
 
@@ -133,43 +132,16 @@ quit
     msg Choose a clicking mode before clicking a tile!
 quit
 
-#2Dloop
-    set xMin {runArg1}
-    set yMin {runArg2}
-    set xMax {runArg3}
-    set yMax {runArg4}
-    set loopTask {runArg5}
-    
-    
-    set yi {yMin}
-    #yLoop
-        
-        set xi {xMin}
-        #xLoop
-            call {loopTask}|{xi}|{yi}
-            setadd xi 1
-            if xi|>|xMax jump #xLoopBreak
-        jump #xLoop
-        #xLoopBreak
-        
-        
-        setadd yi 1
-        if yi|>|yMax quit
-    jump #yLoop
-quit
-
 #setupTile
-    set x {runArg1}
-    set y {runArg2}
-    setrandrangedecimal r 0 1
+    setrandrange r 0 100
     set block {Tile.Block.Clear}
     setadd curTotalCoveredSafeSpaces 1
-    if r|<=|0.2 call #isMine
     //was 0.2
-    set tile[{x},{y}].block {block}
-    set tile[{x},{y}].state {Tile.State.Covered}
-    tempblock Iron {x} {y} 0
-    //tempblock {tile[{x},{y}].block} {x} {y} 0
+    if r|<=|20 call #isMine
+
+    set tile[{xi},{yi}].block {block}
+    set tile[{xi},{yi}].state {Tile.State.Covered}
+    tempblock Iron {xi} {yi} 0
 quit
 #isMine
     set block {Tile.Block.Mine}
@@ -323,25 +295,21 @@ quit
     set yMax {y}
     setadd yMax 1
     
-    call #2Dloop|{xMin}|{yMin}|{xMax}|{yMax}|#checkMine
+    call #Loop2D|#checkMine|{xMin}|{yMin}|{xMax}|{yMax}
     //show curTotalMines
 quit
 
 #checkMine
-    set xMineCheck {runArg1}
-    set yMineCheck {runArg2}
-    if tile[{xMineCheck},{yMineCheck}].block|=|Tile.Block.Mine setadd curTotalMines 1
+    if tile[{xi},{yi}].block|=|Tile.Block.Mine setadd curTotalMines 1
 quit
 
 #explodeMine
-    set x {runArg1}
-    set y {runArg2}
-    if tile[{x},{y}].block|=|Tile.Block.Mine call #doExplosion
-quit
-#doExplosion
-    cmd effect explosion {x} {y} 0 0 0 0
-    tempblock {Tile.Block.Mine} {x} {y} 0
-    //delay 100
+    if tile[{xi},{yi}].block|=|Tile.Block.Mine call #doExplosion
+    quit
+    #doExplosion
+    cmd effect explosion {xi} {yi} 0 0 0 0
+    tempblock {Tile.Block.Mine} {xi} {yi} 0
+    delay 50
 quit
 
 #gameOver
@@ -351,7 +319,7 @@ quit
     cpemsg bot1 ┘
     msg You died with &x{curTotalCoveredSafeSpaces}&S tiles left to clear.
     set gameState {GameState.Losing}
-    call #2Dloop|0|0|{BOARD_X_MAX}|{BOARD_Y_MAX}|#explodeMine
+    call #Loop2D|#explodeMine|0|0|{BOARD_X_MAX}|{BOARD_Y_MAX}
     set gameState {GameState.Lost}
 quit
 
